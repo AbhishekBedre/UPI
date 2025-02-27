@@ -4,35 +4,76 @@
   <title>UPI Payment</title>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <style>
-    #qrcode { margin-top: 20px; }
-    button { padding: 10px 20px; margin-top: 10px; }
+    #qrcode, #paymentOptions { margin-top: 20px; }
+    button, input { padding: 10px; margin: 5px; }
+    #upiLink { width: 300px; }
   </style>
 </head>
 <body>
   <h2>Make a Payment</h2>
   <input type="text" id="upiId" placeholder="Recipient UPI ID (e.g., you@bank)">
+  <input type="text" id="payeeName" placeholder="Recipient Name">
   <input type="number" id="amount" placeholder="Amount in INR">
   <button onclick="generatePayment()">Generate Payment</button>
-  
-  <div id="qrcode"></div>
-  <a id="upiButton" style="display:none;">
-    <button>Open UPI App</button>
-  </a>
+
+  <div id="paymentOptions" style="display:none;">
+    <p>Choose an app:</p>
+    <a id="phonepeButton" href="#" target="_blank"><button>Open PhonePe</button></a>
+    <a id="gpayButton" href="#" target="_blank"><button>Open Google Pay</button></a>
+    <a id="paytmButton" href="#" target="_blank"><button>Open Paytm</button></a>
+    <a id="bhimButton" href="#" target="_blank"><button>Open BHIM</button></a>
+    <a id="whatsappButton" href="#" target="_blank"><button>Open WhatsApp</button></a>
+    <a id="amazonpayButton" href="#" target="_blank"><button>Open Amazon Pay</button></a>
+    <a id="mobikwikButton" href="#" target="_blank"><button>Open Mobikwik</button></a>
+    <a id="freechargeButton" href="#" target="_blank"><button>Open Freecharge</button></a>
+    <a id="credButton" href="#" target="_blank"><button>Open Cred</button></a>
+    <a id="axispayButton" href="#" target="_blank"><button>Open Axis Pay</button></a>
+    <a id="sbipayButton" href="#" target="_blank"><button>Open SBI Pay</button></a>
+    <a id="upiButton" href="#" target="_blank"><button>Open Any UPI App</button></a>
+    <input type="text" id="upiLink" readonly>
+    <button onclick="copyLink()">Copy Link</button>
+    <div id="qrcode"></div>
+    <p>On mobile: Click an app button or scan the QR code. On desktop: Scan with your phone or copy the link.</p>
+  </div>
+
+  <div id="confirmation" style="margin-top: 20px;">
+    <p>After paying, enter your transaction ID:</p>
+    <input type="text" id="txnId" placeholder="Transaction ID">
+    <button onclick="confirmPayment()">Confirm</button>
+  </div>
 
   <script>
     function generatePayment() {
       const upiId = document.getElementById("upiId").value;
+      const payeeName = document.getElementById("payeeName").value;
       const amount = document.getElementById("amount").value;
-      
-      if (!upiId || !amount) {
-        alert("Please enter both UPI ID and amount!");
+      const callbackUrl = encodeURIComponent("https://abhishekbedre.github.io/UPI/");
+
+      if (!upiId || !payeeName || !amount) {
+        alert("Please enter UPI ID, Recipient Name, and Amount!");
         return;
       }
 
-      // Construct UPI deep link
-      const upiLink = `upi://pay?pa=${upiId}&pn=RecipientName&am=${amount}&cu=INR&tn=PaymentViaBrowser`;
-
-      // Generate QR code as fallback
+      const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&tn=PaymentViaBrowser&url=${callbackUrl}`;
+      
+      // App-specific deep links with url parameter
+      document.getElementById("phonepeButton").href = `phonepe://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&url=${callbackUrl}`;
+      document.getElementById("gpayButton").href = `gpay://upi/pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&url=${callbackUrl}`;
+      document.getElementById("paytmButton").href = `paytmmp://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&url=${callbackUrl}`;
+      document.getElementById("bhimButton").href = `bhim://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&url=${callbackUrl}`;
+      document.getElementById("whatsappButton").href = `whatsapp://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&url=${callbackUrl}`;
+      document.getElementById("amazonpayButton").href = `amazonpay://upi/pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&url=${callbackUrl}`;
+      document.getElementById("mobikwikButton").href = `mobikwik://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&url=${callbackUrl}`;
+      document.getElementById("freechargeButton").href = `freecharge://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&url=${callbackUrl}`;
+      document.getElementById("credButton").href = `cred://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&url=${callbackUrl}`;
+      document.getElementById("axispayButton").href = `axispay://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&url=${callbackUrl}`;
+      document.getElementById("sbipayButton").href = `sbipay://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&url=${callbackUrl}`;
+      document.getElementById("upiButton").href = upiLink;
+      
+      // Copyable link
+      document.getElementById("upiLink").value = upiLink;
+      
+      // QR code
       document.getElementById("qrcode").innerHTML = "";
       new QRCode(document.getElementById("qrcode"), {
         text: upiLink,
@@ -40,10 +81,23 @@
         height: 128
       });
 
-      // Set button link and show it
-      const upiButton = document.getElementById("upiButton");
-      upiButton.href = upiLink;
-      upiButton.style.display = "block";
+      document.getElementById("paymentOptions").style.display = "block";
+    }
+
+    function copyLink() {
+      const upiLink = document.getElementById("upiLink");
+      upiLink.select();
+      document.execCommand("copy");
+      alert("Link copied! Paste it into your UPI app.");
+    }
+
+    function confirmPayment() {
+      const txnId = document.getElementById("txnId").value;
+      if (txnId) {
+        alert("Payment confirmed with Transaction ID: " + txnId);
+      } else {
+        alert("Please enter a Transaction ID!");
+      }
     }
   </script>
 </body>
